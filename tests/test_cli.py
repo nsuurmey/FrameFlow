@@ -32,8 +32,15 @@ def test_cli_no_args():
     assert result == 0
 
 
-def test_analyze_placeholder():
-    """Test that analyze command placeholder works."""
-    sys.argv = ["clarity", "analyze", "dummy.webm"]
+def test_analyze_with_fixture():
+    """Test that analyze command works with real fixture."""
+    sys.argv = ["clarity", "analyze", "tests/fixtures/sample.webm"]
     result = main()
     assert result == 0
+
+
+def test_analyze_nonexistent_file():
+    """Test that analyze command fails gracefully with nonexistent file."""
+    sys.argv = ["clarity", "analyze", "nonexistent.webm"]
+    result = main()
+    assert result == 1
