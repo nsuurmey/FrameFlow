@@ -75,11 +75,11 @@ def check_first_run(ctx: typer.Context):
 
 @app.command()
 def practice(
+    audio_file: Path | None = typer.Argument(
+        None, help="Path to .webm audio file (optional - will prompt if not provided)"
+    ),
     topic: str | None = typer.Option(
         None, "--topic", help="Override the daily topic"
-    ),
-    paste: bool = typer.Option(
-        False, "--paste", help="Paste transcript instead of uploading audio"
     ),
 ):
     """
@@ -87,17 +87,23 @@ def practice(
 
     Workflow: setup → warm-up → record → transcribe → analyze → feedback
     """
-    console.print(Panel.fit(
-        "[bold cyan]Practice Session[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will guide you through a complete daily practice session:\n"
-        "  • Phase-appropriate warm-up exercises\n"
-        "  • Generated topic and framework\n"
-        "  • Audio upload and transcription\n"
-        "  • AI-powered analysis and scoring\n"
-        "  • Personalized feedback and tips",
-        title="✨ Practice",
-    ))
+    try:
+        from clarity.commands import run_practice_session
+
+        run_practice_session(audio_path=audio_file, topic_override=topic)
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1) from e
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1) from e
+    except Exception as e:
+        console.print(f"[red]Unexpected error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()
