@@ -108,6 +108,9 @@ def practice(
 
 @app.command()
 def baseline(
+    audio_file: Path | None = typer.Argument(
+        None, help="Path to .webm audio file (optional - will prompt if not provided)"
+    ),
     force: bool = typer.Option(False, "--force", help="Re-record baseline (replaces existing)"),
 ):
     """
@@ -115,15 +118,39 @@ def baseline(
 
     The baseline is used to measure your progress over time.
     """
-    console.print(Panel.fit(
-        "[bold cyan]Baseline Recording[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will record your baseline speaking metrics:\n"
-        "  • Simple speaking task (no pressure)\n"
-        "  • Full analysis of your current abilities\n"
-        "  • Reference point for tracking improvement",
-        title="📊 Baseline",
-    ))
+    from clarity.storage import StorageManager
+
+    storage = StorageManager()
+
+    # Check if baseline exists and force not set
+    if not force:
+        try:
+            data = storage.read_all()
+            if data.get("profile", {}).get("baseline"):
+                console.print("\n[yellow]Baseline already recorded.[/yellow]")
+                console.print("Use [cyan]--force[/cyan] to re-record.\n")
+                raise typer.Exit(0)
+        except Exception:
+            pass
+
+    # Run baseline as a practice session
+    try:
+        from clarity.commands import run_practice_session
+
+        console.print("\n[bold green]Recording Baseline Session[/bold green]")
+        console.print("This establishes your starting metrics.\n")
+
+        run_practice_session(audio_path=audio_file)
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1) from e
+    except Exception as e:
+        console.print(f"[red]Unexpected error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -136,16 +163,17 @@ def history(
 
     Shows recent sessions with dates, topics, scores, and phase info.
     """
-    console.print(Panel.fit(
-        "[bold cyan]Session History[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will display your practice history:\n"
-        "  • Session dates and topics\n"
-        "  • Composite scores\n"
-        "  • Current phase and streak\n"
-        "  • Trend indicators (↑/↓)",
-        title="📜 History",
-    ))
+    try:
+        from clarity.commands import run_history
+
+        run_history(limit=limit, show_all=all_sessions)
+
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -155,21 +183,22 @@ def status():
 
     Shows where you are in the 90-day program and what's next.
     """
-    console.print(Panel.fit(
-        "[bold cyan]Current Status[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will show:\n"
-        "  • Current phase and day count\n"
-        "  • Active streak\n"
-        "  • Progress toward next phase\n"
-        "  • Recommended focus areas",
-        title="📈 Status",
-    ))
+    try:
+        from clarity.commands import run_status
+
+        run_status()
+
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()
 def review(
-    session_id: str = typer.Argument(..., help="Session ID to review"),
+    session_id: str = typer.Argument(..., help="Session ID to review (number or 'last')"),
     export: bool = typer.Option(False, "--export", help="Export to markdown file"),
 ):
     """
@@ -177,16 +206,17 @@ def review(
 
     Re-displays the full scorecard, tips, and transcript.
     """
-    console.print(Panel.fit(
-        f"[bold cyan]Review Session: {session_id}[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will display:\n"
-        "  • Full scorecard with dimension scores\n"
-        "  • Actionable tips with examples\n"
-        "  • Complete transcript\n"
-        "  • Trends vs. previous sessions",
-        title="🔍 Review",
-    ))
+    try:
+        from clarity.commands import run_review
+
+        run_review(session_id=session_id, export=export)
+
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -196,16 +226,17 @@ def weekly():
 
     Aggregate metrics and insights for the current week.
     """
-    console.print(Panel.fit(
-        "[bold cyan]Weekly Summary[/bold cyan]\n\n"
-        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
-        "This command will show:\n"
-        "  • Sessions completed this week\n"
-        "  • Average scores by dimension\n"
-        "  • Best and worst dimensions\n"
-        "  • Streak status",
-        title="📅 Weekly",
-    ))
+    try:
+        from clarity.commands import run_weekly
+
+        run_weekly()
+
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
+        raise typer.Exit(1) from e
 
 
 @app.command()

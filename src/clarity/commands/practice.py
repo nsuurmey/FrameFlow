@@ -280,7 +280,8 @@ def _run_baseline_session(
         config: ConfigManager instance
         console: Rich Console instance
     """
-    brief = setup_baseline_session(console)
+    # Display baseline instructions
+    setup_baseline_session(console)
 
     # Prompt for recording
     console.print("[bold yellow]📱 Record your response now[/bold yellow]")
