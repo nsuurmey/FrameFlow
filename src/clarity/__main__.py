@@ -3,18 +3,250 @@ Main entry point for the Clarity CLI.
 
 Usage:
     python -m clarity --help
-    python -m clarity analyze <file.webm>
+    python -m clarity practice
+    python -m clarity baseline
+    python -m clarity history
+    python -m clarity status
+    python -m clarity review <session_id>
+    python -m clarity analyze <file.webm>  # Legacy MVP0 command
+    python -m clarity report                # Legacy MVP0 command
 """
 
-import argparse
 import sys
 from pathlib import Path
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
 
 from clarity.analyzers.analyzer import ClarityAnalyzer
 from clarity.audio_loader import AudioLoader, FFmpegNotFoundError
 from clarity.reporting.csv_logger import CSVLogger
 from clarity.reporting.plotter import MetricsPlotter
 from clarity.reporting.report_generator import ReportGenerator
+from clarity.setup import FirstRunSetup
+
+# Initialize Typer app and Rich console
+app = typer.Typer(
+    name="clarity",
+    help="Speaking clarity practice tool - improve your extemporaneous speaking skills",
+    add_completion=False,
+)
+console = Console()
+
+# Global setup instance
+_setup: FirstRunSetup | None = None
+
+
+def get_setup() -> FirstRunSetup:
+    """Get or create the FirstRunSetup instance."""
+    global _setup
+    if _setup is None:
+        _setup = FirstRunSetup(console=console)
+    return _setup
+
+
+@app.callback(invoke_without_command=True)
+def check_first_run(ctx: typer.Context):
+    """
+    Check for first-run setup before executing commands.
+
+    Runs automatically before every command.
+    """
+    # Skip setup check for --help and --version
+    if ctx.resilient_parsing:
+        return
+
+    # Skip setup check for legacy commands (analyze, report)
+    # They don't need storage/config
+    if ctx.invoked_subcommand in ["analyze", "report"]:
+        return
+
+    # Run first-run setup if needed
+    setup = get_setup()
+    if setup.is_first_run() and ctx.invoked_subcommand:
+        setup.check_setup_on_startup()
+
+
+# ============================================================================
+# MVP1 Commands (stubs for now)
+# ============================================================================
+
+
+@app.command()
+def practice(
+    topic: str | None = typer.Option(
+        None, "--topic", help="Override the daily topic"
+    ),
+    paste: bool = typer.Option(
+        False, "--paste", help="Paste transcript instead of uploading audio"
+    ),
+):
+    """
+    Complete a full daily practice session.
+
+    Workflow: setup → warm-up → record → transcribe → analyze → feedback
+    """
+    console.print(Panel.fit(
+        "[bold cyan]Practice Session[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will guide you through a complete daily practice session:\n"
+        "  • Phase-appropriate warm-up exercises\n"
+        "  • Generated topic and framework\n"
+        "  • Audio upload and transcription\n"
+        "  • AI-powered analysis and scoring\n"
+        "  • Personalized feedback and tips",
+        title="✨ Practice",
+    ))
+
+
+@app.command()
+def baseline(
+    force: bool = typer.Option(False, "--force", help="Re-record baseline (replaces existing)"),
+):
+    """
+    Record your baseline session (first-time setup).
+
+    The baseline is used to measure your progress over time.
+    """
+    console.print(Panel.fit(
+        "[bold cyan]Baseline Recording[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will record your baseline speaking metrics:\n"
+        "  • Simple speaking task (no pressure)\n"
+        "  • Full analysis of your current abilities\n"
+        "  • Reference point for tracking improvement",
+        title="📊 Baseline",
+    ))
+
+
+@app.command()
+def history(
+    limit: int = typer.Option(10, "--limit", "-n", help="Number of sessions to show"),
+    all_sessions: bool = typer.Option(False, "--all", help="Show all sessions"),
+):
+    """
+    View your practice session history.
+
+    Shows recent sessions with dates, topics, scores, and phase info.
+    """
+    console.print(Panel.fit(
+        "[bold cyan]Session History[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will display your practice history:\n"
+        "  • Session dates and topics\n"
+        "  • Composite scores\n"
+        "  • Current phase and streak\n"
+        "  • Trend indicators (↑/↓)",
+        title="📜 History",
+    ))
+
+
+@app.command()
+def status():
+    """
+    View your current phase, streak, and progress.
+
+    Shows where you are in the 90-day program and what's next.
+    """
+    console.print(Panel.fit(
+        "[bold cyan]Current Status[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will show:\n"
+        "  • Current phase and day count\n"
+        "  • Active streak\n"
+        "  • Progress toward next phase\n"
+        "  • Recommended focus areas",
+        title="📈 Status",
+    ))
+
+
+@app.command()
+def review(
+    session_id: str = typer.Argument(..., help="Session ID to review"),
+    export: bool = typer.Option(False, "--export", help="Export to markdown file"),
+):
+    """
+    Review detailed analysis from a past session.
+
+    Re-displays the full scorecard, tips, and transcript.
+    """
+    console.print(Panel.fit(
+        f"[bold cyan]Review Session: {session_id}[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will display:\n"
+        "  • Full scorecard with dimension scores\n"
+        "  • Actionable tips with examples\n"
+        "  • Complete transcript\n"
+        "  • Trends vs. previous sessions",
+        title="🔍 Review",
+    ))
+
+
+@app.command()
+def weekly():
+    """
+    Generate a weekly summary report.
+
+    Aggregate metrics and insights for the current week.
+    """
+    console.print(Panel.fit(
+        "[bold cyan]Weekly Summary[/bold cyan]\n\n"
+        "🚧 [yellow]Coming in MVP1[/yellow]\n\n"
+        "This command will show:\n"
+        "  • Sessions completed this week\n"
+        "  • Average scores by dimension\n"
+        "  • Best and worst dimensions\n"
+        "  • Streak status",
+        title="📅 Weekly",
+    ))
+
+
+@app.command()
+def setup(
+    force: bool = typer.Option(
+        False, "--force", help="Re-run setup even if already configured"
+    ),
+    validate: bool = typer.Option(
+        False, "--validate", help="Validate current setup without changing"
+    ),
+):
+    """
+    Run or validate first-time setup.
+
+    Use this to reconfigure Clarity or check your current setup.
+    """
+    setup_instance = get_setup()
+
+    if validate:
+        console.print("\n[bold]Validating Clarity Setup[/bold]\n")
+        is_valid = setup_instance.validate_setup()
+        console.print()
+
+        if is_valid:
+            console.print("[green]✓ Setup is valid and complete![/green]\n")
+            raise typer.Exit(0)
+        else:
+            console.print(
+                "[yellow]Setup has issues. Run 'clarity setup --force' to reconfigure.[/yellow]\n"
+            )
+            raise typer.Exit(1)
+
+    if not force and not setup_instance.is_first_run():
+        console.print("\n[yellow]Clarity is already set up.[/yellow]")
+        console.print("Use [cyan]--force[/cyan] to reconfigure.\n")
+        raise typer.Exit(0)
+
+    try:
+        setup_instance.run_setup()
+        raise typer.Exit(0)
+    except KeyboardInterrupt:
+        raise typer.Exit(1) from None
+
+
+# ============================================================================
+# MVP0 Legacy Commands (keep working)
+# ============================================================================
 
 
 def format_results(results: dict) -> str:
@@ -90,82 +322,65 @@ def format_results(results: dict) -> str:
     return "\n".join(lines)
 
 
-def cmd_analyze(args: argparse.Namespace) -> int:
+@app.command()
+def analyze(
+    file: Path = typer.Argument(  # noqa: B008
+        ..., help="Path to .webm audio file", exists=True
+    ),
+):
     """
-    Handle the 'analyze' subcommand.
+    [MVP0 LEGACY] Analyze a .webm audio file for speaking metrics.
 
-    Args:
-        args: Parsed command-line arguments
-
-    Returns:
-        Exit code (0 for success, 1 for error)
+    This is the MVP0 analysis command. Use 'practice' for the full MVP1 experience.
     """
-    file_path = Path(args.file)
-
-    # Validate file exists
-    if not file_path.exists():
-        print(f"Error: File not found: {file_path}", file=sys.stderr)
-        return 1
-
-    # Validate file extension
-    if file_path.suffix.lower() != ".webm":
-        print(
-            f"Warning: Expected .webm file, got {file_path.suffix}. Attempting to load anyway...",
-            file=sys.stderr,
-        )
-
     try:
         # Load audio using AudioLoader
-        print(f"Analyzing: {file_path}")
-        print()
+        console.print(f"[cyan]Analyzing:[/cyan] {file}")
+        console.print()
 
         loader = AudioLoader(sample_rate=16000)
-        audio_data, sample_rate = loader.load(file_path)
+        audio_data, sample_rate = loader.load(file)
         duration = len(audio_data) / sample_rate
 
-        print(f"✓ Audio loaded ({duration:.2f}s, {sample_rate} Hz)")
-        print()
-        print("Running analysis...")
+        console.print(f"✓ Audio loaded ({duration:.2f}s, {sample_rate} Hz)")
+        console.print()
+        console.print("Running analysis...")
 
         # Run all analyzers
         analyzer = ClarityAnalyzer()
         results = analyzer.analyze(audio_data, sample_rate)
 
         # Print formatted results
-        print()
-        print(format_results(results))
+        console.print()
+        console.print(format_results(results))
 
         # Save to CSV log
-        print()
+        console.print()
         logger = CSVLogger()
-        logger.log(str(file_path), results)
-        print(f"✓ Results logged to: {logger.csv_path}")
+        logger.log(str(file), results)
+        console.print(f"✓ Results logged to: {logger.csv_path}")
 
-        return 0
+        raise typer.Exit(0)
 
     except FFmpegNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
+        console.print(f"[red]Error: {e}[/red]", file=sys.stderr)
+        raise typer.Exit(1) from e
     except FileNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
+        console.print(f"[red]Error: {e}[/red]", file=sys.stderr)
+        raise typer.Exit(1) from e
     except Exception as e:
-        print(f"Error during analysis: {e}", file=sys.stderr)
+        console.print(f"[red]Error during analysis: {e}[/red]", file=sys.stderr)
         import traceback
-
         traceback.print_exc()
-        return 1
+        raise typer.Exit(1) from e
 
 
-def cmd_report(args: argparse.Namespace) -> int:
+@app.command()
+def report():
     """
-    Handle the 'report' subcommand.
+    [MVP0 LEGACY] Generate a progress report from logged sessions.
 
-    Args:
-        args: Parsed command-line arguments
-
-    Returns:
-        Exit code (0 for success, 1 for error)
+    This is the MVP0 reporting command. Use 'history' and 'weekly' for MVP1 features.
     """
     try:
         # Read CSV log
@@ -173,10 +388,13 @@ def cmd_report(args: argparse.Namespace) -> int:
         sessions = logger.read_all()
 
         if not sessions:
-            print("No sessions logged yet. Run 'clarity analyze' first.", file=sys.stderr)
-            return 1
+            console.print(
+                "[yellow]No sessions logged yet. Run 'clarity analyze' first.[/yellow]",
+                file=sys.stderr,
+            )
+            raise typer.Exit(1)
 
-        print(f"Generating report from {len(sessions)} sessions...")
+        console.print(f"Generating report from {len(sessions)} sessions...")
 
         # Generate plot
         plotter = MetricsPlotter()
@@ -188,64 +406,29 @@ def cmd_report(args: argparse.Namespace) -> int:
         report_path = "clarity_report.md"
         report_gen.generate(sessions, report_path, plot_path)
 
-        print()
-        print("✓ Report generation complete!")
-        print(f"  - Markdown: {report_path}")
-        print(f"  - Plot: {plot_path}")
+        console.print()
+        console.print("✓ Report generation complete!")
+        console.print(f"  - Markdown: {report_path}")
+        console.print(f"  - Plot: {plot_path}")
 
-        return 0
+        raise typer.Exit(0)
 
     except Exception as e:
-        print(f"Error generating report: {e}", file=sys.stderr)
+        console.print(f"[red]Error generating report: {e}[/red]", file=sys.stderr)
         import traceback
-
         traceback.print_exc()
-        return 1
+        raise typer.Exit(1) from e
 
 
-def main() -> int:
+# ============================================================================
+# Main entry point
+# ============================================================================
+
+
+def main():
     """Main entry point for the Clarity CLI."""
-    parser = argparse.ArgumentParser(
-        prog="clarity",
-        description="Speaking clarity practice tool - analyze audio for speaking metrics",
-    )
-
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s 0.1.0",
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # analyze command
-    analyze_parser = subparsers.add_parser(
-        "analyze",
-        help="Analyze a .webm audio file for speaking metrics",
-    )
-    analyze_parser.add_argument(
-        "file",
-        help="Path to .webm audio file",
-    )
-
-    # report command
-    subparsers.add_parser(
-        "report",
-        help="Generate a progress report from logged sessions",
-    )
-
-    args = parser.parse_args()
-
-    if args.command == "analyze":
-        return cmd_analyze(args)
-    elif args.command == "report":
-        return cmd_report(args)
-    elif args.command is None:
-        parser.print_help()
-        return 0
-
-    return 0
+    app()
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

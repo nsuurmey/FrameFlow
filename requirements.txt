@@ -14,5 +14,12 @@ matplotlib==3.8.2
 # Speech recognition for filler detection and WPM
 faster-whisper==1.0.3
 
+# CLI framework and terminal UI (MVP1)
+typer==0.12.3
+rich==13.7.1
+
+# API client for Claude (MVP1)
+anthropic==0.34.2
+
 # Audio processing backend (requires ffmpeg at system level)
 # Note: ffmpeg must be installed separately via system package manager
