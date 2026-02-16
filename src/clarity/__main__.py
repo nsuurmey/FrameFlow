@@ -12,6 +12,9 @@ from pathlib import Path
 
 from clarity.analyzers.analyzer import ClarityAnalyzer
 from clarity.audio_loader import AudioLoader, FFmpegNotFoundError
+from clarity.reporting.csv_logger import CSVLogger
+from clarity.reporting.plotter import MetricsPlotter
+from clarity.reporting.report_generator import ReportGenerator
 
 
 def format_results(results: dict) -> str:
@@ -132,6 +135,12 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         print()
         print(format_results(results))
 
+        # Save to CSV log
+        print()
+        logger = CSVLogger()
+        logger.log(str(file_path), results)
+        print(f"✓ Results logged to: {logger.csv_path}")
+
         return 0
 
     except FFmpegNotFoundError as e:
@@ -142,6 +151,52 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         return 1
     except Exception as e:
         print(f"Error during analysis: {e}", file=sys.stderr)
+        import traceback
+
+        traceback.print_exc()
+        return 1
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    """
+    Handle the 'report' subcommand.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    try:
+        # Read CSV log
+        logger = CSVLogger()
+        sessions = logger.read_all()
+
+        if not sessions:
+            print("No sessions logged yet. Run 'clarity analyze' first.", file=sys.stderr)
+            return 1
+
+        print(f"Generating report from {len(sessions)} sessions...")
+
+        # Generate plot
+        plotter = MetricsPlotter()
+        plot_path = "metrics_plot.png"
+        plotter.plot_metrics(sessions, plot_path)
+
+        # Generate markdown report
+        report_gen = ReportGenerator()
+        report_path = "clarity_report.md"
+        report_gen.generate(sessions, report_path, plot_path)
+
+        print()
+        print("✓ Report generation complete!")
+        print(f"  - Markdown: {report_path}")
+        print(f"  - Plot: {plot_path}")
+
+        return 0
+
+    except Exception as e:
+        print(f"Error generating report: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()
@@ -173,10 +228,18 @@ def main() -> int:
         help="Path to .webm audio file",
     )
 
+    # report command
+    subparsers.add_parser(
+        "report",
+        help="Generate a progress report from logged sessions",
+    )
+
     args = parser.parse_args()
 
     if args.command == "analyze":
         return cmd_analyze(args)
+    elif args.command == "report":
+        return cmd_report(args)
     elif args.command is None:
         parser.print_help()
         return 0
