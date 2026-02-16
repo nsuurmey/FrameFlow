@@ -46,7 +46,7 @@ Digital transformation involves more than just buying new software; it requires 
 13. **Environmental, Social, and Governance (ESG) Criteria**
 Investors and consumers are increasingly holding companies accountable for their impact on the planet and society. Managers must integrate ESG goals into their business models to ensure long-term sustainability and brand loyalty.
 14. **Value-Based Management (VBM)**
-VBM focuses on making decisions that maximize shareholder value over time. It requires managers to link every operational goal back to the company’s cost of capital and overall financial performance.
+VBM focuses on making decisions that maximize shareholder value over time. It requires managers to link every operational goal back to the company's cost of capital and overall financial performance.
 15. **Crisis Management and Continuity Planning**
 Crisis management involves preparing for high-impact, low-probability events like natural disasters or financial crashes. A solid plan ensures that the business can maintain core functions and protect its reputation during a "black swan" event.
 16. **Ethical Leadership and Corporate Responsibility**
