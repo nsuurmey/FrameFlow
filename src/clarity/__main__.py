@@ -10,7 +10,81 @@ import argparse
 import sys
 from pathlib import Path
 
+from clarity.analyzers.analyzer import ClarityAnalyzer
 from clarity.audio_loader import AudioLoader, FFmpegNotFoundError
+
+
+def format_results(results: dict) -> str:
+    """Format analysis results for display."""
+    lines = []
+
+    # Transcript
+    lines.append("\n" + "=" * 60)
+    lines.append("TRANSCRIPT")
+    lines.append("=" * 60)
+    lines.append(results["transcript"])
+
+    # Speaking Rate
+    lines.append("\n" + "=" * 60)
+    lines.append("SPEAKING RATE")
+    lines.append("=" * 60)
+    sr = results["speaking_rate"]
+    lines.append(f"  Words: {sr['word_count']}")
+    lines.append(f"  WPM: {sr['wpm']:.1f}")
+    lines.append(f"  Duration: {sr['duration_seconds']:.2f}s")
+
+    # Filler Words
+    lines.append("\n" + "=" * 60)
+    lines.append("FILLER WORDS")
+    lines.append("=" * 60)
+    fillers = results["fillers"]
+    lines.append(f"  Total: {fillers['total_filler_count']}")
+    if fillers["filler_breakdown"]:
+        lines.append("  Breakdown:")
+        for word, count in sorted(
+            fillers["filler_breakdown"].items(), key=lambda x: x[1], reverse=True
+        ):
+            lines.append(f"    - {word}: {count}")
+    else:
+        lines.append("  (No fillers detected)")
+
+    # Pauses
+    lines.append("\n" + "=" * 60)
+    lines.append("PAUSES")
+    lines.append("=" * 60)
+    pauses = results["pauses"]
+    lines.append(f"  Count: {pauses['pause_count']}")
+    lines.append(f"  Total duration: {pauses['total_pause_duration']:.2f}s")
+    if pauses["pause_count"] > 0:
+        lines.append(f"  Average duration: {pauses['avg_pause_duration']:.2f}s")
+    lines.append(f"  Percentage: {pauses['pause_percentage']:.1f}%")
+
+    # Energy
+    lines.append("\n" + "=" * 60)
+    lines.append("ENERGY/VOLUME")
+    lines.append("=" * 60)
+    energy = results["energy"]
+    lines.append(f"  Mean: {energy['mean_energy_db']:.1f} dB")
+    lines.append(f"  Std Dev: {energy['std_energy_db']:.1f} dB")
+    lines.append(f"  Range: {energy['min_energy_db']:.1f} to {energy['max_energy_db']:.1f} dB")
+
+    # Pitch
+    lines.append("\n" + "=" * 60)
+    lines.append("PITCH")
+    lines.append("=" * 60)
+    pitch = results["pitch"]
+    if pitch["mean_pitch_hz"] > 0:
+        lines.append(f"  Mean: {pitch['mean_pitch_hz']:.1f} Hz")
+        lines.append(f"  Std Dev: {pitch['std_pitch_hz']:.1f} Hz")
+        lines.append(
+            f"  Range: {pitch['min_pitch_hz']:.1f} to {pitch['max_pitch_hz']:.1f} Hz"
+        )
+    else:
+        lines.append("  (No pitched sound detected)")
+
+    lines.append("\n" + "=" * 60)
+
+    return "\n".join(lines)
 
 
 def cmd_analyze(args: argparse.Namespace) -> int:
@@ -39,19 +113,24 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 
     try:
         # Load audio using AudioLoader
-        loader = AudioLoader(sample_rate=16000)
-        print(f"Loading audio from: {file_path}")
+        print(f"Analyzing: {file_path}")
+        print()
 
+        loader = AudioLoader(sample_rate=16000)
         audio_data, sample_rate = loader.load(file_path)
         duration = len(audio_data) / sample_rate
 
-        # Print basic info
-        print("✓ Audio loaded successfully")
-        print(f"  Duration: {duration:.2f} seconds")
-        print(f"  Sample rate: {sample_rate} Hz")
-        print(f"  Samples: {len(audio_data):,}")
+        print(f"✓ Audio loaded ({duration:.2f}s, {sample_rate} Hz)")
         print()
-        print("[Next steps] Analysis metrics not yet implemented (Epic 0.3)")
+        print("Running analysis...")
+
+        # Run all analyzers
+        analyzer = ClarityAnalyzer()
+        results = analyzer.analyze(audio_data, sample_rate)
+
+        # Print formatted results
+        print()
+        print(format_results(results))
 
         return 0
 
@@ -62,7 +141,10 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 1
     except Exception as e:
-        print(f"Error loading audio: {e}", file=sys.stderr)
+        print(f"Error during analysis: {e}", file=sys.stderr)
+        import traceback
+
+        traceback.print_exc()
         return 1
 
 
