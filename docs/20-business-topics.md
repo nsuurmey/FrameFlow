@@ -22,7 +22,7 @@ The rise of remote and hybrid work requires managers to focus on outcomes rather
 6. **Psychological Safety in the Workplace**
 Managers who foster psychological safety encourage employees to take risks and voice concerns without fear of punishment. This environment is proven to drive innovation and prevent high-stakes organizational errors.
 7. **Emotional Intelligence (EQ) in Leadership**
-A leader's ability to recognize and regulate their own emotions, while empathizing with others, is often more predictive of success than IQ. High EQ helps in navigating office politics and resolving team conflicts effectively.
+A leader’s ability to recognize and regulate their own emotions, while empathizing with others, is often more predictive of success than IQ. High EQ helps in navigating office politics and resolving team conflicts effectively.
 8. **Inclusive Leadership and DE&I**
 Diversity, Equity, and Inclusion (DE&I) are no longer just HR buzzwords but essential pillars of a modern business strategy. Inclusive leaders actively seek diverse perspectives to avoid groupthink and better understand a global customer base.
 
@@ -57,7 +57,7 @@ In an era of high transparency, managers must lead with a clear ethical compass 
 ### Organizational Behavior
 
 17. **Change Management Models**
-Managing organizational change requires a structured approach, such as Kotter's 8-Step Process, to minimize employee resistance. Success depends on clear communication and getting "buy-in" from key stakeholders early in the process.
+Managing organizational change requires a structured approach, such as Kotter’s 8-Step Process, to minimize employee resistance. Success depends on clear communication and getting "buy-in" from key stakeholders early in the process.
 18. **The "Flat" Organizational Structure**
 Moving away from traditional hierarchies, many modern firms adopt flat structures to speed up communication. This empowers lower-level employees to make decisions, though it requires high levels of self-discipline and accountability.
 19. **Conflict Resolution Strategies**
