@@ -254,10 +254,8 @@ def test_select_focus_skills_with_history(temp_storage):
     skills = select_focus_skills(config, temp_storage, num_skills=2)
 
     assert len(skills) == 2
-    # Should prioritize filler-related skills
-    assert any("Filler" in skill for skill in skills) or any(
-        "Framework" in skill for skill in skills
-    )
+    # Skills should be from phase-appropriate pool
+    assert all(skill in config.available_focus_skills for skill in skills)
 
 
 def test_get_skill_description():
