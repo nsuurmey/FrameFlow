@@ -1,0 +1,15 @@
+# Core dependencies for MVP 0
+# Audio processing
+pydub==0.25.1
+librosa==0.10.1
+
+# Numerical and scientific computing
+numpy==1.26.4
+scipy==1.11.4
+pandas==2.1.4
+
+# Visualization
+matplotlib==3.8.2
+
+# Audio processing backend (requires ffmpeg at system level)
+# Note: ffmpeg must be installed separately via system package manager
