@@ -349,17 +349,17 @@ def run_prep_timer(seconds: int, console: Console) -> None:
 
 def is_baseline_session(storage_manager) -> bool:
     """
-    Check if this is a baseline session (first-ever session).
+    Check if this is a baseline session (no baseline recorded yet).
 
     Args:
         storage_manager: StorageManager instance
 
     Returns:
-        True if no sessions in storage, False otherwise
+        True if no baseline exists, False otherwise
     """
+    from clarity.session.baseline import has_baseline
+
     try:
-        data = storage_manager.read_all()
-        sessions = data.get("sessions", [])
-        return len(sessions) == 0
+        return not has_baseline(storage_manager)
     except Exception:
         return True  # Assume baseline if storage not initialized
