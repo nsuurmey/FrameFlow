@@ -135,7 +135,7 @@ def run_practice_session(
     # Build prompt
     phase_config = get_phase_config(brief.phase)
     baseline = get_baseline_metrics(storage)
-    recent_sessions = storage.get_recent_sessions(n=5)
+    recent_sessions = storage.get_recent_sessions(count=5)
 
     prompt = build_analysis_prompt(
         phase_config=phase_config,
